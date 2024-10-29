@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rocket-ce
+  namespace: rocket-ce
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: rocket-ce
+  template:
+    metadata:
+      labels:
+        app: rocket-ce
+    spec:
+      containers:
+        - env:
+            - name: MONGO_URL
+              value: >-
+                mongodb://<mongo_user>:<mongo_pass>@<db_ip>:<db_port>/<db_name>?authSource=admin&directConnection=true
+            - name: BIND_IP
+              value: rocket-ce-pod
+            - name: ROOT_URL
+              value: <url>
+            - name: MONGO_OPLOG_URL
+              value: >-
+                mongodb://<oplog_user>:<oplog_pass>@<db_ip>:<db_port>/local?authSource=admin&directConnection=true
+          image: rocket.chat:6.6.6
+          imagePullPolicy: IfNotPresent
+          name: rocket-ce-pod
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+      dnsPolicy: ClusterFirst
+      hostname: rocket-ce-pod
+      nodeSelector:
+        worker: 'true'
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
